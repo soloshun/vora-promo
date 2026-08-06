@@ -1,110 +1,148 @@
 {
-  "$comment": "The narration script AND the render manifest. `startSeconds` is authoritative: each line is mounted as its own <Audio> at that exact time, so narration cannot drift from the visuals. Edit text here, then re-run `npm run voiceover`.",
+  "$comment": "The narration script AND the render manifest. `startSeconds` is authoritative: each line is mounted as its own <Audio> at that exact time, so narration cannot drift from the visuals. Written short and clipped to match the fast cut \u2014 a beat roughly every 2.5s, with almost no dead air. Edit text here, then re-run `npm run voiceover` (changed lines regenerate automatically).",
   "generated": true,
   "modelId": "eleven_multilingual_v2",
-  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "voiceId": "XrExE9yKIg1WjnnlVkGX",
   "voiceSettings": {
-    "stability": 0.42,
+    "stability": 0.32,
     "similarity_boost": 0.75,
-    "style": 0.12,
-    "use_speaker_boost": true
+    "style": 0.45,
+    "use_speaker_boost": true,
+    "speed": 1.06
   },
   "lines": [
     {
       "id": "01",
       "scene": "problem",
-      "startSeconds": 5.4,
+      "startSeconds": 3.2,
       "text": "You recorded the whole idea."
     },
     {
       "id": "02",
       "scene": "problem",
-      "startSeconds": 8,
-      "text": "Inside it are a dozen stories nobody will ever see."
+      "startSeconds": 5.2,
+      "text": "Inside it: a dozen stories nobody will ever see."
     },
     {
       "id": "03",
       "scene": "problem",
-      "startSeconds": 11.6,
-      "text": "Finding them by hand is why most of them stay buried."
+      "startSeconds": 8.6,
+      "text": "Vora finds them."
     },
     {
       "id": "04",
       "scene": "record",
-      "startSeconds": 15.2,
-      "text": "Vora starts where you do."
+      "startSeconds": 10.4,
+      "text": "Screen. Camera. Mic. One studio."
     },
     {
       "id": "05",
       "scene": "record",
-      "startSeconds": 18,
-      "text": "Screen, camera and microphone in one studio — and every second saved locally as you record."
+      "startSeconds": 13,
+      "text": "Every second saved as you record."
     },
     {
       "id": "06",
-      "scene": "understand",
-      "startSeconds": 27,
-      "text": "Then Vora listens."
+      "scene": "record",
+      "startSeconds": 15.8,
+      "text": "Crash-safe by default."
     },
     {
       "id": "07",
       "scene": "understand",
-      "startSeconds": 29.4,
-      "text": "Transcript, speakers, visual context and narrative shape, read together."
+      "startSeconds": 18.4,
+      "text": "Then Vora listens."
     },
     {
       "id": "08",
       "scene": "understand",
-      "startSeconds": 34.8,
-      "text": "Every suggestion arrives with its evidence, its reasoning, and a complete ending."
+      "startSeconds": 20,
+      "text": "Transcript. Speakers. Visuals. Story shape."
     },
     {
       "id": "09",
-      "scene": "clipModes",
-      "startSeconds": 41.6,
-      "text": "Choose how it listens."
+      "scene": "understand",
+      "startSeconds": 23.2,
+      "text": "Read together, in one pass."
     },
     {
       "id": "10",
-      "scene": "clipModes",
-      "startSeconds": 44,
-      "text": "Standout moments. Full story arcs. Topic stacks. Tutorial cuts."
+      "scene": "understand",
+      "startSeconds": 25.4,
+      "text": "Every cut comes with its evidence."
     },
     {
       "id": "11",
-      "scene": "edit",
-      "startSeconds": 51.6,
-      "text": "Then shape the story once."
+      "scene": "clipModes",
+      "startSeconds": 28.4,
+      "text": "Choose how it listens."
     },
     {
       "id": "12",
-      "scene": "edit",
-      "startSeconds": 54.2,
-      "text": "Captions, framing and safe zones for every feed — without ever touching your master."
+      "scene": "clipModes",
+      "startSeconds": 30.2,
+      "text": "Moments. Story arcs. Topics. Tutorials."
     },
     {
       "id": "13",
-      "scene": "publish",
-      "startSeconds": 61.6,
-      "text": "Approve every destination yourself."
+      "scene": "clipModes",
+      "startSeconds": 33,
+      "text": "Different evidence, not different labels."
     },
     {
       "id": "14",
-      "scene": "publish",
-      "startSeconds": 64.2,
-      "text": "Publish now, or place the release on the calendar. Nothing ships without you."
+      "scene": "edit",
+      "startSeconds": 36.4,
+      "text": "Shape it once."
     },
     {
       "id": "15",
-      "scene": "proof",
-      "startSeconds": 73,
-      "text": "Private storage. Encrypted credentials. Originals untouched."
+      "scene": "edit",
+      "startSeconds": 38,
+      "text": "Captions. Framing. Safe zones. Every feed."
     },
     {
       "id": "16",
+      "scene": "edit",
+      "startSeconds": 41.2,
+      "text": "Your master never changes."
+    },
+    {
+      "id": "17",
+      "scene": "publish",
+      "startSeconds": 44.4,
+      "text": "You approve every destination."
+    },
+    {
+      "id": "18",
+      "scene": "publish",
+      "startSeconds": 46.6,
+      "text": "Publish now, or schedule it."
+    },
+    {
+      "id": "19",
+      "scene": "publish",
+      "startSeconds": 49,
+      "text": "Nothing ships without you."
+    },
+    {
+      "id": "20",
+      "scene": "proof",
+      "startSeconds": 53.6,
+      "text": "Private storage. Encrypted tokens. Originals untouched."
+    },
+    {
+      "id": "21",
       "scene": "cta",
-      "startSeconds": 81,
-      "text": "Vora. Give every good idea another life."
+      "startSeconds": 58.6,
+      "text": "Vora."
+    },
+    {
+      "id": "22",
+      "scene": "cta",
+      "startSeconds": 60,
+      "text": "Give every good idea another life."
     }
-  ]
+  ],
+  "voiceName": "Matilda \u2014 professional, upbeat, alto"
 }

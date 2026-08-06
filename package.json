@@ -6,7 +6,7 @@
     "start": "remotion studio",
     "build": "remotion render VoraPromo out/vora-promo.mp4",
     "build:social": "remotion render VoraPromo out/vora-promo-1080p.mp4 --scale=1",
-    "still": "remotion still VoraPromo out/poster.png --frame=2470",
+    "still": "remotion still VoraPromo out/poster.png --frame=1850",
     "voiceover": "node scripts/generate-voiceover.mjs",
     "typecheck": "tsc --noEmit",
     "upgrade": "remotion upgrade",

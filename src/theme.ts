@@ -44,19 +44,40 @@ export const FPS = 30;
 
 /**
  * Scene map. `start`/`duration` are frames at 30fps and are the single source
- * of truth for both the timeline and the generated voiceover script, so the
- * narration can never drift from what is on screen.
+ * of truth for the timeline, the music arrangement, and the generated
+ * voiceover script — so narration, score and picture cannot drift apart.
+ *
+ * Cut to a 120 BPM grid: one bar is 60 frames, one beat 15. Every scene starts
+ * on a bar or half-bar line so the edit lands with the music rather than
+ * against it.
  */
 export const scenes = {
-  coldOpen: { start: 0, duration: 150 },
-  problem: { start: 150, duration: 270 },
-  record: { start: 420, duration: 360 },
-  understand: { start: 780, duration: 420 },
-  clipModes: { start: 1200, duration: 300 },
-  edit: { start: 1500, duration: 300 },
-  publish: { start: 1800, duration: 360 },
-  proof: { start: 2160, duration: 240 },
-  cta: { start: 2400, duration: 240 },
+  coldOpen: { start: 0, duration: 90 }, // 0:00
+  problem: { start: 90, duration: 210 }, // 0:03
+  record: { start: 300, duration: 240 }, // 0:10
+  understand: { start: 540, duration: 300 }, // 0:18
+  clipModes: { start: 840, duration: 240 }, // 0:28
+  edit: { start: 1080, duration: 240 }, // 0:36
+  publish: { start: 1320, duration: 270 }, // 0:44
+  proof: { start: 1590, duration: 150 }, // 0:53
+  cta: { start: 1740, duration: 180 }, // 0:58
 } as const;
 
-export const TOTAL_FRAMES = 2640; // 88s
+export const TOTAL_FRAMES = 1920; // 64s
+
+/**
+ * Motion presets.
+ *
+ * The film is paced to feel active, so elements arrive fast and settle fast.
+ * `snap` is the default: it reaches its target in roughly eight frames with a
+ * touch of overshoot, which reads as energy without wobbling. Reserve `glide`
+ * for large surfaces where a bounce would look cheap.
+ */
+export const motion = {
+  snap: { damping: 24, mass: 0.34, stiffness: 220 },
+  pop: { damping: 16, mass: 0.3, stiffness: 260 },
+  glide: { damping: 40, mass: 0.6, stiffness: 170 },
+} as const;
+
+/** Frames a scene may overrun its slot to dissolve into the next one. */
+export const OVERLAP = 8;

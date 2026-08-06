@@ -1,6 +1,6 @@
 # Vora product film
 
-An 88-second enterprise product film for [Vora](../Vora), built in
+A 64-second enterprise product film for [Vora](../Vora), built in
 [Remotion](https://remotion.dev) — React components rendered deterministically
 to 1920×1080 H.264.
 
@@ -23,19 +23,42 @@ npm run typecheck
 
 | # | Scene | In | Dur | What it shows |
 |---|-------|------|-----|---------------|
-| 1 | Cold open | 0:00 | 5s | Mark resolves out of a playhead sweep. Ink and lime. |
-| 2 | Premise | 0:05 | 9s | A 94-minute source scrubs past; the stories inside it light up. |
-| 3 | 01 Capture | 0:14 | 12s | Studio stage: composited screen + camera, live meters, chunk recovery ticking up. |
-| 4 | 02 Understanding | 0:26 | 14s | The pipeline filling in order — diarised transcript, keyframe sampling, scored candidates. |
-| 5 | 03 Modes | 0:40 | 10s | Selection walks the four clipping modes; every dependent surface re-keys. |
-| 6 | 04 Shaping | 0:50 | 10s | 16:9 → 1:1 → 9:16 reframe with word-by-word burned-in captions. |
-| 7 | 05 Release | 1:00 | 12s | Targets validate, preflight counts to 12/12, then the plan flips to Approved. |
-| 8 | Proof | 1:12 | 8s | Four true numbers and the security posture. |
-| 9 | Close | 1:20 | 8s | Violet field, orbit rings, final lockup. |
+| 1 | Cold open | 0:00 | 3s | Mark snaps in, wordmark behind it. Ink and lime. |
+| 2 | Premise | 0:03 | 7s | A 94-minute source scrubs past; the stories inside it pop up one by one. |
+| 3 | 01 Capture | 0:10 | 8s | Studio stage: composited screen + camera, live meters, chunk recovery ticking up. |
+| 4 | 02 Understanding | 0:18 | 10s | The pipeline filling in order — diarised transcript, keyframe sampling, scored candidates. |
+| 5 | 03 Modes | 0:28 | 8s | Selection walks the four clipping modes; every dependent surface re-keys. |
+| 6 | 04 Shaping | 0:36 | 8s | 16:9 → 1:1 → 9:16 reframe with word-by-word burned-in captions. |
+| 7 | 05 Release | 0:44 | 9s | Targets validate, preflight counts to 12/12, then the plan flips to Approved. |
+| 8 | Proof | 0:53 | 5s | Four true numbers and the security posture. |
+| 9 | Close | 0:58 | 6s | Violet field, orbit rings, final lockup. |
 
-Scenes cross-dissolve over 18 frames. The timing map lives in `src/theme.ts`
-(`scenes`) and is the single source of truth — the voiceover script is written
-against the same numbers.
+The film is cut fast on purpose. Scenes are short, motion is snappy
+(`motion.snap` in `src/theme.ts` settles in about eight frames), and the
+cross-dissolve is only 8 frames so the edit reads as a cut rather than a fade.
+
+**Motion carries the argument.** Where a claim can be shown as movement rather
+than stated as a caption, it is:
+
+| Scene | The claim | The motion that makes it |
+|-------|-----------|--------------------------|
+| Premise | The stories are buried in the recording | Markers surface out of the source bar as the playhead crosses them; the raw recording then dims behind them |
+| 01 Capture | Every second is saved as you record | Chunks physically detach from the stage and arc down into the recovery bar, which fills as they land |
+| 02 Understanding | Vora reads the whole thing | A read-head sweeps down the transcript while lines resolve under it; candidates then lift *out of* that evidence |
+| 03 Modes | These are alternatives to one question | The result copy wipes in from the right on each switch, and the selected card's accent rail wipes open from its centre |
+| 04 Shaping | One master, many feeds | The frame itself narrows 16:9 → 1:1 → 9:16 with the subject held in the safe area |
+| 05 Release | One decision, many destinations | A light sweeps across the four targets on approval, and the plan chip kicks as it flips |
+| Proof | — | Each number kicks as its count settles |
+
+Every scene also carries a slow push-in (`useCameraPush`) and exits with a
+directional slide (`useSceneExit`), so nothing is ever fully static and each cut
+travels forward.
+
+Everything is cut to a **120 BPM grid** — one bar is 60 frames, one beat 15 —
+and every scene starts on a bar or half-bar line, so the picture lands with the
+score instead of against it. The map in `src/theme.ts` (`scenes`) is the single
+source of truth: the timeline, the music arrangement and the voiceover script
+are all written against those same numbers.
 
 ## Layout
 
@@ -93,9 +116,13 @@ child span. Passing it in is what keeps the tails on g, y and p.
 ## Editing notes
 
 - **Retiming a scene:** change `duration` in `src/theme.ts`, then update that
-  scene's internal `outAt` (or its fade `interpolate` range) to match, and shift
-  the affected `startSeconds` in `voiceover.json`. `npm run voiceover -- --check`
-  will tell you if narration no longer fits.
+  scene's internal `outAt` (or its fade `interpolate` range) to match, shift the
+  affected `startSeconds` in `voiceover.json`, and update the matching
+  `automation` window in `scripts/generate-music.mjs`.
+  `npm run voiceover -- --check` will tell you if narration no longer fits.
+- **Changing pace:** the three levers are scene `duration`, the `motion` spring
+  presets, and the per-scene delay/stagger constants. Speeding up the springs
+  alone makes things arrive faster but does not shorten the film.
 - **Animation must be a pure function of `frame`.** No `Date.now()`, no
   `Math.random()` — Remotion renders frames out of order and in parallel.
 - **Colours come from `brand` in `src/theme.ts`**, which mirrors the product's

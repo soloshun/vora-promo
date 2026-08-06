@@ -2,7 +2,7 @@ import React from "react";
 import { Sequence } from "remotion";
 
 import { Narration } from "./components/Narration";
-import { scenes } from "./theme";
+import { OVERLAP, scenes } from "./theme";
 import { ClipModes } from "./scenes/ClipModes";
 import { ColdOpen } from "./scenes/ColdOpen";
 import { Cta } from "./scenes/Cta";
@@ -13,13 +13,11 @@ import { Publish } from "./scenes/Publish";
 import { Record } from "./scenes/Record";
 import { Understand } from "./scenes/Understand";
 
-/**
- * Frames each scene may run past its slot so the outgoing shot can dissolve
- * over the incoming one. Scenes are stacked in reverse order below, which puts
- * the outgoing scene on top of its successor while it fades.
+/*
+ * Scenes are stacked in reverse order below, which puts the outgoing scene on
+ * top of its successor while it fades. OVERLAP (theme.ts) is deliberately short
+ * — at this pace the edit should feel like a cut, not a crossfade.
  */
-const OVERLAP = 18;
-
 const TIMELINE = [
   { key: "coldOpen", slot: scenes.coldOpen, Component: ColdOpen, overlap: 0 },
   { key: "problem", slot: scenes.problem, Component: Problem, overlap: OVERLAP },

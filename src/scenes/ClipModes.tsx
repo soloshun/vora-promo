@@ -9,7 +9,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { Accent, MaskedLines, Rise } from "../components/primitives";
 
 /**
@@ -84,7 +84,7 @@ const MODES = [
   },
 ] as const;
 
-const SWITCH_AT = [26, 92, 158, 224];
+const SWITCH_AT = [10, 68, 126, 184];
 
 export const ClipModes: React.FC = () => {
   const frame = useCurrentFrame();
@@ -98,16 +98,14 @@ export const ClipModes: React.FC = () => {
   const sinceSwitch = frame - SWITCH_AT[active];
 
   // Re-entry animation for every mode-dependent surface.
-  const swap = spring({
-    frame: sinceSwitch,
-    fps,
-    config: { damping: 200, mass: 0.5 },
-  });
+  const swap = spring({ frame: sinceSwitch, fps, config: motion.snap });
 
-  const out = interpolate(frame, [300, 318], [0, 1], {
+  const out = interpolate(frame, [240, 248], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+
+  const GAP = 14;
 
   return (
     <AbsoluteFill
@@ -130,7 +128,7 @@ export const ClipModes: React.FC = () => {
         }}
       >
         <div>
-          <Rise delay={2}>
+          <Rise delay={1}>
             <div
               style={{
                 display: "flex",
@@ -157,7 +155,7 @@ export const ClipModes: React.FC = () => {
           </Rise>
           <MaskedLines
             fontSize={96}
-            delay={8}
+            delay={4}
             lines={[
               <span
                 key="h"
@@ -175,7 +173,7 @@ export const ClipModes: React.FC = () => {
           />
         </div>
         <Rise
-          delay={18}
+          delay={10}
           style={{
             maxWidth: 480,
             fontFamily: font.sans,
@@ -198,7 +196,7 @@ export const ClipModes: React.FC = () => {
             width: 380,
             display: "flex",
             flexDirection: "column",
-            gap: 14,
+            gap: GAP,
           }}
         >
           {MODES.map((m, i) => {
@@ -207,8 +205,8 @@ export const ClipModes: React.FC = () => {
               <Rise
                 key={m.id}
                 index={i}
-                delay={16}
-                stagger={5}
+                delay={8}
+                stagger={3}
                 style={{ flex: 1, display: "flex" }}
               >
                 <div
@@ -228,6 +226,13 @@ export const ClipModes: React.FC = () => {
                     overflow: "hidden",
                   }}
                 >
+                  {/*
+                    The accent rail belongs *inside* the card — the card clips
+                    it to its own rounded corners, so it reads as part of the
+                    selected surface rather than a marker floating beside it.
+                    It still animates: the rail wipes open from the centre each
+                    time selection lands here.
+                  */}
                   {isActive ? (
                     <span
                       style={{
@@ -237,6 +242,8 @@ export const ClipModes: React.FC = () => {
                         bottom: 0,
                         width: 6,
                         background: m.accent,
+                        transform: `scaleY(${Math.min(1, swap)})`,
+                        transformOrigin: "center",
                       }}
                     />
                   ) : null}
@@ -269,7 +276,7 @@ export const ClipModes: React.FC = () => {
 
         {/* Mode illustration */}
         <Rise
-          delay={14}
+          delay={6}
           style={{
             width: 470,
             borderRadius: 30,
@@ -353,7 +360,7 @@ export const ClipModes: React.FC = () => {
 
         {/* Result */}
         <Rise
-          delay={20}
+          delay={10}
           style={{
             flex: 1,
             background: brand.paper,
@@ -370,6 +377,9 @@ export const ClipModes: React.FC = () => {
               justifyContent: "space-between",
               alignItems: "center",
               opacity: swap,
+              // Result copy wipes in from the right on each switch, so the
+              // change of mode reads as new evidence arriving.
+              transform: `translateX(${(1 - swap) * 34}px)`,
             }}
           >
             <span
@@ -420,6 +430,7 @@ export const ClipModes: React.FC = () => {
               marginTop: 8,
               borderLeft: `3px solid ${brand.violet}`,
               paddingLeft: 22,
+              transform: `translateX(${(1 - swap) * 22}px)`,
               fontFamily: font.sans,
               fontSize: 25,
               lineHeight: 1.55,
@@ -475,8 +486,8 @@ export const ClipModes: React.FC = () => {
               {mode.bars.map((bar, i) => {
                 const inRange = i > 2 && i < 11;
                 const grow = interpolate(
-                  sinceSwitch - i * 1.6,
-                  [0, 12],
+                  sinceSwitch - i * 0.9,
+                  [0, 8],
                   [0, 1],
                   { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
                 );

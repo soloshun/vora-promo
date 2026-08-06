@@ -7,9 +7,15 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { ArrowRightIcon } from "../components/brand-icons";
-import { Accent, MaskedLines, Rise, VoraMark } from "../components/primitives";
+import {
+  Accent,
+  MaskedLines,
+  Rise,
+  VoraMark,
+  useCameraPush,
+} from "../components/primitives";
 
 /**
  * Close, 1:20–1:28.
@@ -21,14 +27,11 @@ export const Cta: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const lockup = spring({
-    frame: frame - 130,
-    fps,
-    config: { damping: 200, mass: 0.8 },
-  });
+  const lockup = spring({ frame: frame - 62, fps, config: motion.snap });
 
   // Slow settle on the whole field so the last shot never feels static.
-  const drift = interpolate(frame, [0, 240], [1.04, 1]);
+  const drift = interpolate(frame, [0, 180], [1.04, 1]);
+  const push = useCameraPush(180, 0.035);
 
   return (
     <AbsoluteFill
@@ -48,7 +51,7 @@ export const Cta: React.FC = () => {
           height: 1420,
           borderRadius: "50%",
           border: "1px solid rgba(255,255,255,0.22)",
-          transform: `rotate(${frame * 0.14}deg) scale(${drift})`,
+          transform: `rotate(${frame * 0.26}deg) scale(${drift})`,
         }}
       />
       <div
@@ -60,7 +63,7 @@ export const Cta: React.FC = () => {
           height: 1040,
           borderRadius: "50%",
           border: `1px solid ${brand.lime}73`,
-          transform: `rotate(${-frame * 0.2}deg) scale(${drift})`,
+          transform: `rotate(${-frame * 0.36}deg) scale(${drift})`,
         }}
       />
       <div
@@ -72,7 +75,7 @@ export const Cta: React.FC = () => {
           height: 1080,
           borderRadius: "50%",
           border: "1px solid rgba(255,255,255,0.14)",
-          transform: `rotate(${frame * 0.1}deg)`,
+          transform: `rotate(${frame * 0.18}deg)`,
         }}
       />
 
@@ -80,9 +83,10 @@ export const Cta: React.FC = () => {
         style={{
           padding: "96px 104px",
           justifyContent: "center",
+          transform: `scale(${push})`,
         }}
       >
-        <Rise delay={4}>
+        <Rise delay={1}>
           <div
             style={{
               fontFamily: font.mono,
@@ -98,8 +102,8 @@ export const Cta: React.FC = () => {
 
         <MaskedLines
           fontSize={154}
-          delay={14}
-          stagger={8}
+          delay={6}
+          stagger={5}
           lineHeight={0.86}
           style={{ marginTop: 44 }}
           lines={[
@@ -129,7 +133,7 @@ export const Cta: React.FC = () => {
         />
 
         <Rise
-          delay={62}
+          delay={30}
           style={{
             marginTop: 62,
             display: "flex",
@@ -181,7 +185,9 @@ export const Cta: React.FC = () => {
             alignItems: "center",
             justifyContent: "space-between",
             opacity: lockup,
-            transform: `translateY(${(1 - lockup) * 18}px)`,
+            transform: `translateY(${(1 - lockup) * 26}px) scale(${
+              0.94 + lockup * 0.06
+            })`,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>

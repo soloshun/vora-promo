@@ -9,7 +9,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { Chapter } from "../components/Chapter";
 import { Accent, Rise, Waveform } from "../components/primitives";
 
@@ -35,7 +35,7 @@ const ASPECTS = [
 ] as const;
 
 /** Frame at which each aspect becomes active. */
-const ASPECT_AT = [16, 96, 156];
+const ASPECT_AT = [6, 66, 126];
 
 const TRIM_WIDTH = 660;
 const TRIM_IN = 0.22;
@@ -53,7 +53,7 @@ export const Edit: React.FC = () => {
   // Continuous ratio interpolation so the crop truly morphs rather than cuts.
   const ratio = interpolate(
     frame,
-    [ASPECT_AT[0], ASPECT_AT[1], ASPECT_AT[1] + 26, ASPECT_AT[2], ASPECT_AT[2] + 26],
+    [ASPECT_AT[0], ASPECT_AT[1], ASPECT_AT[1] + 18, ASPECT_AT[2], ASPECT_AT[2] + 18],
     [16 / 9, 16 / 9, 1, 1, 9 / 16],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -61,18 +61,14 @@ export const Edit: React.FC = () => {
   const STAGE_H = 560;
   const frameWidth = STAGE_H * ratio;
 
-  const panelIn = spring({
-    frame: frame - 10,
-    fps,
-    config: { damping: 200, mass: 0.9 },
-  });
+  const panelIn = spring({ frame: frame - 3, fps, config: motion.glide });
 
   return (
     <AbsoluteFill>
       <Chapter
         index="04"
         eyebrow="Shape for every channel"
-        outAt={300}
+        outAt={240}
         copyRatio={0.33}
         background={brand.sky}
         headlineSize={78}
@@ -236,9 +232,9 @@ export const Edit: React.FC = () => {
               >
                 {CAPTION_WORDS.map((word, i) => {
                   const p = spring({
-                    frame: frame - 56 - i * 7,
+                    frame: frame - 22 - i * 4,
                     fps,
-                    config: { damping: 15, mass: 0.4 },
+                    config: motion.pop,
                   });
                   const isKey = word === "underneath" || word === "layer";
                   return (
@@ -342,7 +338,7 @@ export const Edit: React.FC = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {["Bold focus", "Clean", "Boxed highlight", "High contrast"].map(
                 (preset, i) => (
-                  <Rise key={preset} index={i} delay={150} stagger={5}>
+                  <Rise key={preset} index={i} delay={86} stagger={3}>
                     <span
                       style={{
                         display: "block",

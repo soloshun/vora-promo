@@ -1,7 +1,7 @@
 import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-import { brand, clayShadow, font } from "../theme";
+import { brand, clayShadow, font, motion } from "../theme";
 
 /**
  * Paper grain overlay. Mirrors `.marketing-grain`: two offset dot lattices
@@ -167,13 +167,13 @@ export const ClayCard: React.FC<{
  * Staggered entrance. Children lift and fade in sequence rather than all at
  * once, which keeps dense product mock-ups from arriving as a single slab.
  */
-export const useStagger = (index: number, delay = 0, stagger = 4): number => {
+export const useStagger = (index: number, delay = 0, stagger = 3): number => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return spring({
     frame: frame - delay - index * stagger,
     fps,
-    config: { damping: 200, mass: 0.55 },
+    config: motion.snap,
   });
 };
 
@@ -184,7 +184,7 @@ export const Rise: React.FC<{
   distance?: number;
   children: React.ReactNode;
   style?: React.CSSProperties;
-}> = ({ index = 0, delay = 0, stagger = 4, distance = 26, children, style }) => {
+}> = ({ index = 0, delay = 0, stagger = 3, distance = 26, children, style }) => {
   const p = useStagger(index, delay, stagger);
   return (
     <div
@@ -234,7 +234,7 @@ export const MaskedLines: React.FC<{
   lines,
   fontSize,
   delay = 0,
-  stagger = 6,
+  stagger = 4,
   style,
   lineHeight = 0.9,
 }) => {
@@ -252,7 +252,7 @@ export const MaskedLines: React.FC<{
         const p = spring({
           frame: frame - delay - i * stagger,
           fps,
-          config: { damping: 200, mass: 0.7 },
+          config: motion.glide,
         });
         return (
           <div
@@ -405,6 +405,48 @@ export const Waveform: React.FC<{
       })}
     </div>
   );
+};
+
+/**
+ * Slow push-in applied at every scene root.
+ *
+ * Nothing on screen is ever completely still: even a held frame creeps forward
+ * a couple of percent across its scene. It is barely perceptible shot by shot,
+ * but it is most of the difference between a film that feels alive and a deck
+ * of animated slides.
+ */
+export const useCameraPush = (duration: number, amount = 0.03): number => {
+  const frame = useCurrentFrame();
+  return (
+    1 +
+    interpolate(frame, [0, duration], [0, amount], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    })
+  );
+};
+
+/**
+ * Directional scene exit.
+ *
+ * Scenes leave the way the story is travelling — forward acts slide left,
+ * so the cut carries momentum instead of dissolving in place. Returns the
+ * style to spread onto a scene root.
+ */
+export const useSceneExit = (
+  outAt: number,
+  direction: -1 | 1 = -1,
+  length = 8,
+): React.CSSProperties => {
+  const frame = useCurrentFrame();
+  const out = interpolate(frame, [outAt, outAt + length], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return {
+    opacity: 1 - out,
+    transform: `translateX(${out * direction * 70}px) scale(${1 - out * 0.04})`,
+  };
 };
 
 /** Counts a number up with an ease-out, for the proof-point scene. */

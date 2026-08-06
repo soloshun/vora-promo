@@ -15,11 +15,13 @@
  *   ELEVENLABS_API_KEY=sk_... npm run voiceover
  *   ELEVENLABS_API_KEY=sk_... npm run voiceover -- --voice <voiceId>
  *   npm run voiceover -- --voices     # list voices on the account
+ *   npm run voiceover -- --quota      # character balance vs. what a rerun costs
  *   npm run voiceover -- --check      # re-check timing, no API calls
  */
 
-import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseBuffer } from "music-metadata";
@@ -27,7 +29,25 @@ import { parseBuffer } from "music-metadata";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_PATH = path.join(ROOT, "src", "voiceover.json");
 const OUT_DIR = path.join(ROOT, "public", "vo");
+/** Maps line id → hash of the text and voice settings that produced its mp3. */
+const CACHE_PATH = path.join(OUT_DIR, ".cache.json");
 const API = "https://api.elevenlabs.io/v1";
+
+/**
+ * Minimal .env loader, so `npm run voiceover` works without exporting the key
+ * into the shell first. Existing environment variables always win.
+ */
+const loadDotEnv = () => {
+  const file = path.join(ROOT, ".env");
+  if (!existsSync(file)) return;
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/.exec(line);
+    if (m && !process.env[m[1]]) {
+      process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
+  }
+};
+loadDotEnv();
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -51,6 +71,55 @@ const fail = (message) => {
 
 const apiKey = process.env.ELEVENLABS_API_KEY;
 
+/**
+ * Fingerprints everything that affects the audio. When a line's text or the
+ * voice settings change, its hash changes and it regenerates on the next run —
+ * so editing the script never silently leaves a stale take on disk.
+ */
+const fingerprint = (script, line) =>
+  createHash("sha256")
+    .update(
+      JSON.stringify([
+        line.text,
+        script.voiceId,
+        script.modelId,
+        script.voiceSettings,
+      ]),
+    )
+    .digest("hex")
+    .slice(0, 16);
+
+const readCache = () => {
+  try {
+    return JSON.parse(readFileSync(CACHE_PATH, "utf8"));
+  } catch {
+    return {};
+  }
+};
+
+/** Reports the character balance, to separate quota problems from plan ones. */
+async function reportQuota() {
+  if (!apiKey) fail("ELEVENLABS_API_KEY is not set.");
+  const res = await fetch(`${API}/user/subscription`, {
+    headers: { "xi-api-key": apiKey },
+  });
+  if (!res.ok) fail(`ElevenLabs returned ${res.status}: ${await res.text()}`);
+  const d = await res.json();
+  const left = d.character_limit - d.character_count;
+  const needed = JSON.parse(readFileSync(SCRIPT_PATH, "utf8")).lines.reduce(
+    (n, l) => n + l.text.length,
+    0,
+  );
+  console.log(
+    `\n${colour.bold("ElevenLabs quota")}\n\n` +
+      `  plan          ${d.tier}\n` +
+      `  characters    ${d.character_count} / ${d.character_limit} used\n` +
+      `  remaining     ${colour.green(String(left))}\n` +
+      `  this script   ${needed} characters for a full regeneration\n\n` +
+      `  ${left >= needed ? colour.green("✓ enough for a full regeneration") : colour.red("✗ not enough for a full regeneration")}\n`,
+  );
+}
+
 /** Lists the voices available on the account, so a voice ID can be chosen. */
 async function listVoices() {
   if (!apiKey) fail("ELEVENLABS_API_KEY is not set.");
@@ -71,28 +140,53 @@ async function listVoices() {
   );
 }
 
-/** Synthesises one line and returns the mp3 bytes. */
-async function synthesise(script, line) {
+/**
+ * Synthesises one line and returns the mp3 bytes.
+ *
+ * `speed` is only honoured by some models. Rather than pin the script to a
+ * model list that will age, the first attempt sends it and a rejection retries
+ * without it — the take is then just marginally slower, not missing.
+ */
+async function synthesise(script, line, settings = script.voiceSettings) {
   const res = await fetch(
     `${API}/text-to-speech/${script.voiceId}?output_format=mp3_44100_128`,
     {
       method: "POST",
-      headers: {
-        "xi-api-key": apiKey,
-        "Content-Type": "application/json",
-      },
+      headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
         text: line.text,
         model_id: script.modelId,
-        voice_settings: script.voiceSettings,
+        voice_settings: settings,
       }),
     },
   );
 
   if (!res.ok) {
-    fail(
-      `Line ${line.id} failed — ElevenLabs returned ${res.status}:\n  ${await res.text()}`,
-    );
+    const body = await res.text();
+
+    // A library voice on a free plan fails here, and the raw 402 reads like a
+    // billing problem when it is actually a plan-tier restriction — the
+    // character balance is untouched. Say so plainly.
+    if (res.status === 402 && body.includes("paid_plan_required")) {
+      fail(
+        `Voice ${script.voiceId} is a Voice Library voice, and this account's ` +
+          `plan cannot use library voices through the API.\n` +
+          `  This is NOT a credit problem — run with --quota to see the balance.\n` +
+          `  Either upgrade the ElevenLabs plan, or pick one of the voices already\n` +
+          `  on the account: npm run voiceover -- --voices`,
+      );
+    }
+
+    if (res.status === 422 && "speed" in settings) {
+      const { speed, ...rest } = settings;
+      console.log(
+        `  ${colour.yellow("!")} ${line.id}  ${colour.dim(
+          `model rejected speed=${speed}; retrying at normal rate`,
+        )}`,
+      );
+      return synthesise(script, line, rest);
+    }
+    fail(`Line ${line.id} failed — ElevenLabs returned ${res.status}:\n  ${body}`);
   }
   return Buffer.from(await res.arrayBuffer());
 }
@@ -163,6 +257,7 @@ async function checkTiming(script) {
 async function main() {
   const script = JSON.parse(await readFile(SCRIPT_PATH, "utf8"));
 
+  if (flag("quota")) return reportQuota();
   if (flag("voices")) return listVoices();
   if (flag("check")) return void (await checkTiming(script));
 
@@ -185,25 +280,37 @@ async function main() {
     )}\n`,
   );
 
+  const cache = readCache();
+  const seen = new Set();
+  let generated = 0;
+
   for (const line of script.lines) {
     const file = path.join(OUT_DIR, `${line.id}.mp3`);
-    if (existsSync(file) && !flag("force")) {
-      const { size } = await stat(file);
-      console.log(
-        `  ${colour.dim("·")} ${line.id}  ${colour.dim(
-          `cached (${(size / 1024).toFixed(0)} kB) — pass --force to regenerate`,
-        )}`,
-      );
+    const hash = fingerprint(script, line);
+    seen.add(line.id);
+
+    if (existsSync(file) && cache[line.id] === hash && !flag("force")) {
+      console.log(`  ${colour.dim("·")} ${line.id}  ${colour.dim("unchanged")}`);
       continue;
     }
+
     const audio = await synthesise(script, line);
     await writeFile(file, audio);
+    cache[line.id] = hash;
+    generated++;
     console.log(
       `  ${colour.green("✓")} ${line.id}  ${colour.dim(
         `${(audio.length / 1024).toFixed(0)} kB`,
       )}  ${line.text.slice(0, 58)}${line.text.length > 58 ? "…" : ""}`,
     );
   }
+
+  // Drop cache entries for lines that no longer exist in the script.
+  for (const id of Object.keys(cache)) if (!seen.has(id)) delete cache[id];
+  await writeFile(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`);
+  console.log(
+    `\n  ${generated} regenerated, ${script.lines.length - generated} reused.`,
+  );
 
   script.generated = true;
   await writeFile(SCRIPT_PATH, `${JSON.stringify(script, null, 2)}\n`);

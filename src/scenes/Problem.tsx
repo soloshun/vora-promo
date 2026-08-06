@@ -7,8 +7,14 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
-import { Accent, Grain, MaskedLines } from "../components/primitives";
+import { brand, font, motion } from "../theme";
+import {
+  Accent,
+  Grain,
+  MaskedLines,
+  useCameraPush,
+  useSceneExit,
+} from "../components/primitives";
 
 /**
  * The premise, 0:05–0:14.
@@ -44,14 +50,10 @@ export const Problem: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const barIn = spring({
-    frame: frame - 6,
-    fps,
-    config: { damping: 200, mass: 1.4 },
-  });
+  const barIn = spring({ frame: frame - 3, fps, config: motion.glide });
 
   // Playhead scrubs the full source, triggering each moment as it passes.
-  const playhead = interpolate(frame, [30, 190], [0, 1], {
+  const playhead = interpolate(frame, [12, 120], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -65,7 +67,16 @@ export const Problem: React.FC = () => {
     "0",
   )}:${String(elapsedSeconds % 60).padStart(2, "0")}`;
 
-  const out = interpolate(frame, [270, 288], [0, 1], {
+  const push = useCameraPush(210);
+  const exit = useSceneExit(210);
+
+  /**
+   * Once the playhead has passed every marker, the stories take over and the
+   * raw recording recedes behind them. That reversal is the scene's argument.
+   * (The chips cannot simply fly upward — the metadata row is directly above
+   * them — so the emphasis shifts instead of the position.)
+   */
+  const surface = interpolate(frame, [124, 156], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -74,8 +85,8 @@ export const Problem: React.FC = () => {
     <AbsoluteFill
       style={{
         background: brand.paper,
-        opacity: 1 - out,
-        transform: `scale(${1 - out * 0.02})`,
+        ...exit,
+        transform: `scale(${push}) ${exit.transform ?? ""}`,
       }}
     >
       <Grain opacity={0.5} />
@@ -88,8 +99,8 @@ export const Problem: React.FC = () => {
         */}
         <MaskedLines
           fontSize={112}
-          delay={8}
-          stagger={7}
+          delay={2}
+          stagger={4}
           lines={[
             <span key="a" style={HEADLINE}>
               You recorded the whole idea.
@@ -133,6 +144,8 @@ export const Problem: React.FC = () => {
               borderRadius: 14,
               background: "rgba(21,21,21,0.08)",
               overflow: "hidden",
+              // The source recedes as its stories come forward.
+              opacity: 1 - surface * 0.45,
             }}
           >
             {/* Watched portion */}
@@ -184,12 +197,8 @@ export const Problem: React.FC = () => {
 
           {/* Moments surfacing as the playhead crosses them. */}
           {MOMENTS.map((m, i) => {
-            const trigger = 30 + m.at * 160;
-            const p = spring({
-              frame: frame - trigger,
-              fps,
-              config: { damping: 14, mass: 0.4 },
-            });
+            const trigger = 12 + m.at * 104;
+            const p = spring({ frame: frame - trigger, fps, config: motion.pop });
             return (
               <div
                 key={i}
@@ -197,8 +206,11 @@ export const Problem: React.FC = () => {
                   position: "absolute",
                   top: 44,
                   left: BAR_WIDTH * m.at,
-                  transform: `translate(-50%, ${(1 - p) * 26}px) scale(${p})`,
+                  transform: `translate(-50%, ${
+                    (1 - p) * 26 - surface * 8
+                  }px) scale(${p * (1 + surface * 0.12)})`,
                   opacity: Math.min(1, p * 1.4),
+                  zIndex: 2,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -220,11 +232,14 @@ export const Problem: React.FC = () => {
                 >
                   {m.label}
                 </span>
+                {/* The stem grows as the chip rises, tethering it to the
+                    moment in the source it came from. */}
                 <span
                   style={{
                     width: 2,
-                    height: 30,
+                    height: 30 * p + surface * 14,
                     background: m.color,
+                    opacity: 1 - surface * 0.5,
                   }}
                 />
               </div>
@@ -248,7 +263,7 @@ export const Problem: React.FC = () => {
         <div
           style={{
             marginTop: 60,
-            opacity: interpolate(frame, [196, 216], [0, 1], {
+            opacity: interpolate(frame, [128, 144], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
             }),

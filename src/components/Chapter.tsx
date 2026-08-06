@@ -1,9 +1,14 @@
 import React from "react";
-import { interpolate, useCurrentFrame } from "remotion";
 
 import { brand, font } from "../theme";
 import { CheckIcon } from "./brand-icons";
-import { Grain, MaskedLines, Rise } from "./primitives";
+import {
+  Grain,
+  MaskedLines,
+  Rise,
+  useCameraPush,
+  useSceneExit,
+} from "./primitives";
 
 /**
  * Shared chapter frame for the four product acts.
@@ -29,6 +34,8 @@ export const Chapter: React.FC<{
   children: React.ReactNode;
   /** Frame at which the whole chapter begins easing out. */
   outAt: number;
+  /** Which way the story is travelling; the exit slides that way. */
+  exitDirection?: -1 | 1;
 }> = ({
   index,
   eyebrow,
@@ -41,12 +48,10 @@ export const Chapter: React.FC<{
   copyRatio = 0.38,
   children,
   outAt,
+  exitDirection = -1,
 }) => {
-  const frame = useCurrentFrame();
-  const out = interpolate(frame, [outAt, outAt + 18], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const push = useCameraPush(outAt);
+  const exit = useSceneExit(outAt, exitDirection);
 
   const ink = dark ? brand.paper : brand.ink;
   const muted = dark ? "rgba(245,242,234,0.56)" : "rgba(21,21,21,0.58)";
@@ -63,7 +68,7 @@ export const Chapter: React.FC<{
         paddingLeft: flip ? 72 : 0,
       }}
     >
-      <Rise delay={4}>
+      <Rise delay={2}>
         <div
           style={{
             display: "flex",
@@ -86,8 +91,8 @@ export const Chapter: React.FC<{
 
       <MaskedLines
         fontSize={headlineSize}
-        delay={10}
-        stagger={6}
+        delay={4}
+        stagger={4}
         lineHeight={0.94}
         style={{ marginTop: 34 }}
         lines={[headline]}
@@ -95,7 +100,7 @@ export const Chapter: React.FC<{
 
       <div style={{ marginTop: 52, borderTop: `1px solid ${rule}` }}>
         {points.map((point, i) => (
-          <Rise key={point} index={i} delay={30} stagger={7}>
+          <Rise key={point} index={i} delay={16} stagger={4}>
             <div
               style={{
                 display: "flex",
@@ -143,8 +148,9 @@ export const Chapter: React.FC<{
         inset: 0,
         background,
         color: ink,
-        opacity: 1 - out,
-        transform: `scale(${1 - out * 0.025})`,
+        ...exit,
+        // Compose the push with the exit's own transform.
+        transform: `scale(${push}) ${exit.transform ?? ""}`,
       }}
     >
       {!dark ? <Grain opacity={0.42} /> : null}

@@ -7,8 +7,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
-import { Grain, VoraMark } from "../components/primitives";
+import { brand, font, motion } from "../theme";
+import { Grain, VoraMark, useCameraPush } from "../components/primitives";
 
 /**
  * Cold open, 0:00–0:05.
@@ -22,23 +22,12 @@ export const ColdOpen: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const markIn = spring({
-    frame: frame - 8,
-    fps,
-    config: { damping: 200, mass: 0.6 },
-  });
-  const wordIn = spring({
-    frame: frame - 20,
-    fps,
-    config: { damping: 200, mass: 0.7 },
-  });
-  const eyebrowIn = spring({
-    frame: frame - 40,
-    fps,
-    config: { damping: 200, mass: 0.7 },
-  });
+  const markIn = spring({ frame: frame - 3, fps, config: motion.pop });
+  const wordIn = spring({ frame: frame - 10, fps, config: motion.snap });
+  const eyebrowIn = spring({ frame: frame - 22, fps, config: motion.snap });
+  const push = useCameraPush(90, 0.05);
 
-  const exit = interpolate(frame, [126, 150], [0, 1], {
+  const exit = interpolate(frame, [72, 90], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -52,7 +41,9 @@ export const ColdOpen: React.FC = () => {
           alignItems: "center",
           justifyContent: "center",
           opacity: 1 - exit,
-          transform: `scale(${1 + exit * 0.06})`,
+          // Pushes in through the shot, then leaves by continuing to grow —
+          // the film moves *into* the product rather than cutting away from it.
+          transform: `scale(${push + exit * 0.12})`,
         }}
       >
         <div
@@ -72,7 +63,7 @@ export const ColdOpen: React.FC = () => {
               size={126}
               bg={brand.lime}
               fg={brand.ink}
-              progress={interpolate(frame, [8, 28], [0, 1], {
+              progress={interpolate(frame, [3, 16], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               })}

@@ -1,0 +1,2 @@
+voice_id=DbwWo4rVEd5NrejHYUnm
+"https://elevenlabs.io/app/api/voice-library?voiceId=DbwWo4rVEd5NrejHYUnm"

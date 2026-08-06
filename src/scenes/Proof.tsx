@@ -1,7 +1,13 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { ShieldIcon } from "../components/brand-icons";
 import {
   Accent,
@@ -37,12 +43,18 @@ const Stat: React.FC<{ value: number; label: string; index: number }> = ({
   label,
   index,
 }) => {
-  const shown = useCountUp(value, 30 + index * 9, 34);
+  const start = 12 + index * 5;
+  const shown = useCountUp(value, start, 20);
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // A small kick at the moment the count settles, so each number arrives
+  // rather than merely stopping.
+  const land = spring({ frame: frame - (start + 20), fps, config: motion.pop });
   return (
     <Rise
       index={index}
-      delay={24}
-      stagger={8}
+      delay={8}
+      stagger={4}
       style={{
         borderRight: "1px solid rgba(21,21,21,0.2)",
         borderBottom: "1px solid rgba(21,21,21,0.2)",
@@ -57,6 +69,8 @@ const Stat: React.FC<{ value: number; label: string; index: number }> = ({
           letterSpacing: "-0.06em",
           lineHeight: 0.9,
           color: brand.ink,
+          transformOrigin: "left bottom",
+          transform: `scale(${1 + land * 0.06 - land * land * 0.06})`,
         }}
       >
         {shown}
@@ -79,7 +93,7 @@ const Stat: React.FC<{ value: number; label: string; index: number }> = ({
 
 export const Proof: React.FC = () => {
   const frame = useCurrentFrame();
-  const out = interpolate(frame, [240, 258], [0, 1], {
+  const out = interpolate(frame, [150, 158], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -98,8 +112,8 @@ export const Proof: React.FC = () => {
 
       <MaskedLines
         fontSize={132}
-        delay={4}
-        stagger={7}
+        delay={2}
+        stagger={4}
         lineHeight={0.88}
         lines={[
           <span
@@ -144,7 +158,7 @@ export const Proof: React.FC = () => {
       </div>
 
       <Rise
-        delay={92}
+        delay={52}
         style={{
           marginTop: 40,
           borderRadius: 30,
@@ -189,8 +203,8 @@ export const Proof: React.FC = () => {
             <Rise
               key={line}
               index={i}
-              delay={102}
-              stagger={6}
+              delay={58}
+              stagger={3}
               style={{
                 fontFamily: font.sans,
                 fontSize: 21,

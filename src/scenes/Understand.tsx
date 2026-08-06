@@ -7,7 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { Chapter } from "../components/Chapter";
 import { Accent, Waveform } from "../components/primitives";
 
@@ -66,7 +66,7 @@ export const Understand: React.FC = () => {
   const { fps } = useVideoConfig();
 
   // Pipeline stage indicator, matched to what fills below it.
-  const stageProgress = interpolate(frame, [10, 260], [0, 4], {
+  const stageProgress = interpolate(frame, [4, 170], [0, 4], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -76,7 +76,7 @@ export const Understand: React.FC = () => {
       <Chapter
         index="02"
         eyebrow="Editorial intelligence"
-        outAt={420}
+        outAt={300}
         flip
         copyRatio={0.34}
         background={brand.violetSoft}
@@ -134,7 +134,7 @@ export const Understand: React.FC = () => {
                           : "rgba(21,21,21,0.16)",
                       opacity:
                         active && !done
-                          ? interpolate(Math.sin(frame * 0.3), [-1, 1], [0.35, 1])
+                          ? interpolate(Math.sin(frame * 0.46), [-1, 1], [0.35, 1])
                           : 1,
                     }}
                   />
@@ -157,6 +157,7 @@ export const Understand: React.FC = () => {
           {/* ── Transcript ──────────────────────────────────────────── */}
           <div
             style={{
+              position: "relative",
               background: brand.white,
               borderRadius: 24,
               padding: "24px 28px",
@@ -165,6 +166,30 @@ export const Understand: React.FC = () => {
               overflow: "hidden",
             }}
           >
+            {/*
+              A read-head travelling down the transcript while lines resolve
+              underneath it. The scene claims Vora is reading; this is the
+              reading, made visible.
+            */}
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: `${interpolate(frame, [6, 74], [4, 100], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                })}%`,
+                height: 46,
+                pointerEvents: "none",
+                opacity: interpolate(frame, [6, 14, 66, 78], [0, 1, 1, 0], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                }),
+                background:
+                  "linear-gradient(180deg, rgba(99,85,220,0) 0%, rgba(99,85,220,0.13) 70%, rgba(99,85,220,0.5) 100%)",
+              }}
+            />
             <div
               style={{
                 display: "flex",
@@ -196,13 +221,13 @@ export const Understand: React.FC = () => {
             </div>
 
             {TRANSCRIPT.map((line, i) => {
-              const start = 16 + i * 13;
-              const reveal = interpolate(frame - start, [0, 11], [0, 1], {
+              const start = 6 + i * 9;
+              const reveal = interpolate(frame - start, [0, 7], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               });
               const chars = Math.round(line.text.length * reveal);
-              const highlighted = i >= 3 && frame > 150;
+              const highlighted = i >= 3 && frame > 96;
               return (
                 <div
                   key={i}
@@ -271,7 +296,7 @@ export const Understand: React.FC = () => {
               borderRadius: 24,
               padding: "20px 28px",
               boxShadow: "0 20px 55px rgba(72,51,138,0.08)",
-              opacity: interpolate(frame, [104, 124], [0, 1], {
+              opacity: interpolate(frame, [66, 80], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
@@ -297,8 +322,8 @@ export const Understand: React.FC = () => {
             <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               {Array.from({ length: 18 }).map((_, i) => {
                 const scanned = interpolate(
-                  frame - 118 - i * 3.4,
-                  [0, 10],
+                  frame - 74 - i * 2,
+                  [0, 7],
                   [0, 1],
                   { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
                 );
@@ -326,15 +351,17 @@ export const Understand: React.FC = () => {
 
           {/* ── Candidates ──────────────────────────────────────────── */}
           <div style={{ display: "flex", gap: 14 }}>
+            {/* Candidates rise out of the evidence above them, not in from
+                nowhere: they lift from the transcript, scaling up as they come. */}
             {CANDIDATES.map((c, i) => {
               const p = spring({
-                frame: frame - 196 - i * 16,
+                frame: frame - 150 - i * 11,
                 fps,
-                config: { damping: 16, mass: 0.55 },
+                config: motion.pop,
               });
               const scoreP = interpolate(
-                frame - 214 - i * 16,
-                [0, 30],
+                frame - 158 - i * 11,
+                [0, 20],
                 [0, 1],
                 { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
               );
@@ -348,7 +375,10 @@ export const Understand: React.FC = () => {
                     padding: "22px 24px",
                     boxShadow: "0 20px 55px rgba(72,51,138,0.1)",
                     opacity: p,
-                    transform: `translateY(${(1 - p) * 34}px)`,
+                    transform: `translateY(${(1 - p) * -46}px) scale(${
+                      0.9 + p * 0.1
+                    })`,
+                    transformOrigin: "top center",
                     borderTop: `4px solid ${c.color}`,
                   }}
                 >

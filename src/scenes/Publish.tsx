@@ -7,7 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { Chapter } from "../components/Chapter";
 import {
   CheckIcon,
@@ -69,26 +69,18 @@ export const Publish: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const cardIn = spring({
-    frame: frame - 10,
-    fps,
-    config: { damping: 200, mass: 1 },
-  });
+  const cardIn = spring({ frame: frame - 3, fps, config: motion.glide });
 
-  const preflight = useCountUp(12, 178, 46);
-  const approved = frame > 236;
-  const approveP = spring({
-    frame: frame - 236,
-    fps,
-    config: { damping: 12, mass: 0.5 },
-  });
+  const preflight = useCountUp(12, 112, 28);
+  const approved = frame > 152;
+  const approveP = spring({ frame: frame - 152, fps, config: motion.pop });
 
   return (
     <AbsoluteFill>
       <Chapter
         index="05"
         eyebrow="Release control"
-        outAt={360}
+        outAt={270}
         flip
         copyRatio={0.34}
         background={brand.coralSoft}
@@ -169,7 +161,9 @@ export const Publish: React.FC = () => {
                 fontSize: 21,
                 background: approved ? brand.lime : "rgba(21,21,21,0.07)",
                 color: approved ? brand.ink : "rgba(21,21,21,0.45)",
-                transform: `scale(${approved ? 0.94 + approveP * 0.06 : 1})`,
+                transform: `scale(${
+                  approved ? 1 + approveP * 0.09 - approveP * approveP * 0.09 : 1
+                })`,
               }}
             >
               {approved ? <CheckIcon size={19} color={brand.ink} /> : null}
@@ -180,19 +174,54 @@ export const Publish: React.FC = () => {
           {/* ── Targets ─────────────────────────────────────────────── */}
           <div
             style={{
+              position: "relative",
               marginTop: 24,
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
               gap: 16,
             }}
           >
+            {/*
+              On approval a light sweeps across the four targets. The release
+              is one decision propagating outward, and the sweep is what makes
+              that legible without a word of copy.
+            */}
+            <div
+              style={{
+                position: "absolute",
+                inset: -8,
+                zIndex: 3,
+                pointerEvents: "none",
+                borderRadius: 24,
+                opacity: interpolate(frame, [152, 160, 188, 198], [0, 1, 1, 0], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                }),
+                background: `linear-gradient(100deg, transparent 0%, rgba(199,255,74,0) ${
+                  interpolate(frame, [152, 196], [-40, 100], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  }) - 10
+                }%, rgba(199,255,74,0.55) ${interpolate(
+                  frame,
+                  [152, 196],
+                  [-40, 100],
+                  { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+                )}%, rgba(199,255,74,0) ${
+                  interpolate(frame, [152, 196], [-40, 100], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  }) + 10
+                }%, transparent 100%)`,
+              }}
+            />
             {TARGETS.map((target, i) => {
               const p = spring({
-                frame: frame - 44 - i * 18,
+                frame: frame - 12 - i * 8,
                 fps,
-                config: { damping: 16, mass: 0.55 },
+                config: motion.pop,
               });
-              const validated = frame > 120 + i * 14;
+              const validated = frame > 62 + i * 8;
               return (
                 <div
                   key={target.name}
@@ -249,7 +278,7 @@ export const Publish: React.FC = () => {
                             borderRadius: 7,
                             border: "2px solid rgba(21,21,21,0.25)",
                             borderTopColor: brand.violet,
-                            transform: `rotate(${frame * 12}deg)`,
+                            transform: `rotate(${frame * 20}deg)`,
                           }}
                         />
                       )}
@@ -305,7 +334,7 @@ export const Publish: React.FC = () => {
               background: brand.ink,
               color: brand.white,
               padding: "24px 28px",
-              opacity: interpolate(frame, [166, 186], [0, 1], {
+              opacity: interpolate(frame, [104, 116], [0, 1], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),

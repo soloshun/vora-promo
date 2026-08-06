@@ -9,9 +9,12 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { brand, font } from "../theme";
+import { brand, font, motion } from "../theme";
 import { Chapter } from "../components/Chapter";
 import { AudioMeter, Rise } from "../components/primitives";
+
+/** Frames a saved chunk spends in flight from the stage to the recovery bar. */
+const FLIGHT = 13;
 
 /**
  * Act 01 — Capture, 0:14–0:26.
@@ -22,36 +25,33 @@ import { AudioMeter, Rise } from "../components/primitives";
  * from a browser recorder.
  */
 
-const CHUNK_INTERVAL = 6; // frames between persisted chunks (~2s of media)
+const CHUNK_INTERVAL = 5; // frames between persisted chunks
+const CHUNK_SLOTS = 48;
 
 export const Record: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const stageIn = spring({
-    frame: frame - 14,
-    fps,
-    config: { damping: 200, mass: 0.9 },
-  });
+  const stageIn = spring({ frame: frame - 4, fps, config: motion.glide });
 
-  // Recording begins at frame 40 after a short countdown.
-  const recFrame = Math.max(0, frame - 40);
+  // Recording begins almost immediately — the countdown is not the story.
+  const recFrame = Math.max(0, frame - 14);
   const seconds = recFrame / fps;
   const timecode = `00:${String(Math.floor(seconds / 60)).padStart(
     2,
     "0",
   )}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
   const chunks = Math.floor(recFrame / CHUNK_INTERVAL);
-  const recording = frame >= 40;
+  const recording = frame >= 14;
 
-  const blink = interpolate(Math.sin(frame * 0.34), [-1, 1], [0.3, 1]);
+  const blink = interpolate(Math.sin(frame * 0.52), [-1, 1], [0.3, 1]);
 
   return (
     <AbsoluteFill>
       <Chapter
         index="01"
         eyebrow="Capture"
-        outAt={360}
+        outAt={240}
         copyRatio={0.35}
         dark
         background={`radial-gradient(circle at 14% 6%, rgba(99,85,220,0.22), transparent 42%), linear-gradient(150deg, #1b1830 0%, #141319 52%, #1d1518 100%)`}
@@ -77,6 +77,7 @@ export const Record: React.FC = () => {
       >
         <div
           style={{
+            position: "relative",
             width: "100%",
             opacity: stageIn,
             transform: `translateY(${(1 - stageIn) * 28}px)`,
@@ -153,8 +154,8 @@ export const Record: React.FC = () => {
                 >
                   {Array.from({ length: 26 }).map((_, i) => {
                     const grow = interpolate(
-                      frame - 30 - i * 2.2,
-                      [0, 22],
+                      frame - 10 - i * 1.1,
+                      [0, 12],
                       [0, 1],
                       {
                         extrapolateLeft: "clamp",
@@ -212,7 +213,7 @@ export const Record: React.FC = () => {
               style={{
                 position: "absolute",
                 inset: 0,
-                opacity: interpolate(frame, [56, 76], [0, 1], {
+                opacity: interpolate(frame, [24, 36], [0, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 }),
@@ -259,9 +260,9 @@ export const Record: React.FC = () => {
                 border: `3px solid ${recording ? brand.lime : "rgba(255,255,255,0.3)"}`,
                 boxShadow: "0 20px 50px rgba(0,0,0,0.55)",
                 transform: `scale(${spring({
-                  frame: frame - 24,
+                  frame: frame - 8,
                   fps,
-                  config: { damping: 13, mass: 0.5 },
+                  config: motion.pop,
                 })})`,
               }}
             >
@@ -350,6 +351,40 @@ export const Record: React.FC = () => {
             </div>
           </div>
 
+          {/*
+            Every few frames a chunk detaches from the stage and arcs down into
+            the recovery bar. The claim of this scene is "every second is saved
+            as you record", and this is that sentence as motion rather than as
+            a caption.
+          */}
+          {Array.from({ length: chunks + 1 }).map((_, k) => {
+            const age = recFrame - k * CHUNK_INTERVAL;
+            if (age < 0 || age > FLIGHT) return null;
+            const u = age / FLIGHT;
+            const x = 52 - 30 * u;
+            // Falls with a little gravity rather than travelling in a line.
+            const y = 58 + 38 * u * u;
+            return (
+              <div
+                key={k}
+                style={{
+                  position: "absolute",
+                  left: `${x}%`,
+                  top: `${y}%`,
+                  width: 14,
+                  height: 14,
+                  borderRadius: 4,
+                  background: brand.lime,
+                  opacity: (1 - u) * 0.9,
+                  transform: `translate(-50%, -50%) scale(${1 - u * 0.4}) rotate(${
+                    u * 90
+                  }deg)`,
+                  boxShadow: `0 0 ${16 * (1 - u)}px rgba(199,255,74,0.75)`,
+                }}
+              />
+            );
+          })}
+
           {/* ── Recovery trail ──────────────────────────────────────── */}
           <div
             style={{
@@ -360,7 +395,7 @@ export const Record: React.FC = () => {
             }}
           >
             <Rise
-              delay={64}
+              delay={26}
               style={{
                 flex: 1.35,
                 display: "flex",
@@ -401,7 +436,7 @@ export const Record: React.FC = () => {
                 </span>
               </div>
               <div style={{ display: "flex", gap: 4 }}>
-                {Array.from({ length: 42 }).map((_, i) => (
+                {Array.from({ length: CHUNK_SLOTS }).map((_, i) => (
                   <span
                     key={i}
                     style={{
@@ -425,8 +460,8 @@ export const Record: React.FC = () => {
               <Rise
                 key={chip.label}
                 index={i}
-                delay={72}
-                stagger={6}
+                delay={32}
+                stagger={4}
                 style={{
                   flex: 0.62,
                   padding: "22px 24px",
