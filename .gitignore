@@ -1,0 +1,8 @@
+node_modules/
+out/
+.env
+.env.local
+
+# Generated audio — recreate with `npm run voiceover` and `npm run music`.
+public/vo/
+public/music.wav

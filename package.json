@@ -1,0 +1,30 @@
+{
+  "name": "vora-promo",
+  "version": "1.0.0",
+  "description": "Vora product film — Remotion source for the SaaS promo video.",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render VoraPromo out/vora-promo.mp4",
+    "build:social": "remotion render VoraPromo out/vora-promo-1080p.mp4 --scale=1",
+    "still": "remotion still VoraPromo out/poster.png --frame=2470",
+    "voiceover": "node scripts/generate-voiceover.mjs",
+    "typecheck": "tsc --noEmit",
+    "upgrade": "remotion upgrade",
+    "music": "node scripts/generate-music.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "@remotion/cli": "^4.0.506",
+    "@remotion/google-fonts": "^4.0.506",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.506"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "music-metadata": "^11.14.0",
+    "typescript": "^5.9.3"
+  },
+  "private": true
+}
